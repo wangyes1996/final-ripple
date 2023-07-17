@@ -1,0 +1,64 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ah8st6
+
+//@version=5
+strategy(title="均线系统", shorttitle="hi", overlay=false)
+
+// 计算移动平均线
+sma20 = ta.sma(close, 20)
+sma60 = ta.sma(close, 60)
+sma120 = ta.sma(close, 120)
+ema20 = ta.ema(close, 20)
+ema60 = ta.ema(close, 60)
+ema120 = ta.ema(close, 120)
+
+// 绘制移动平均线
+plot(sma20, color=color.black, title="SMA20")
+plot(ema20, color=color.new(color.black, 50), title="EMA20")
+plot(sma60, color=color.blue, title="SMA60")
+plot(ema60, color=color.new(color.blue, 50), title="EMA60")
+plot(sma120, color=color.purple, title="SMA120")
+plot(ema120, color=color.new(color.purple, 50), title="EMA120")
+
+// 判断均线缠绕逻辑
+ma1_current = sma20
+ma2_current = sma60
+ma3_current = sma120
+ma4_current = ema20
+ma5_current = ema60
+ma6_current = ema120
+cond=barstate.islast
+
+ma1_previous = ta.valuewhen(cond, ma1_current, 1)
+ma2_previous = ta.valuewhen(cond, ma2_current, 1)
+ma3_previous = ta.valuewhen(cond, ma3_current, 1)
+ma4_previous = ta.valuewhen(cond, ma4_current, 1)
+ma5_previous = ta.valuewhen(cond, ma5_current, 1)
+ma6_previous = ta.valuewhen(cond, ma6_current, 1)
+
+mathkey=10
+is_entangled = math.abs(ma1_current- ma2_current) <= mathkey or math.abs(ma1_previous- ma2_previous) <= mathkey and
+               math.abs(ma2_current- ma3_current) <= mathkey  or  math.abs(ma2_previous- ma3_previous) <= mathkey and
+               math.abs(ma3_current- ma4_current) <= mathkey or  math.abs(ma3_previous- ma4_previous) <= mathkey and
+              math.abs(ma4_current- ma5_current) <= mathkey or math.abs(ma4_previous- ma5_previous) <= mathkey and
+              math.abs(ma5_current- ma6_current) <= mathkey or math.abs(ma5_previous- ma6_previous) <= mathkey
+
+ma1_previous5 = ta.valuewhen(true, ma1_current, 5)
+
+
+
+if is_entangled and ( ma1_current > ma1_previous5)
+    strategy.order("Buy", strategy.long,1)
+
+// if ta.crossover(ema20,ema120)
+//     strategy.order("Buy", strategy.long,1)
+
+// if ta.crossover(ema120,ema20)
+//     strategy.close('Buy',qty_percent = 100)
+
+if is_entangled and (ma1_current < ma1_previous5)
+    // strategy.order("Buy", strategy.short,1)
+
+    // strategy.close('Buy',qty_percent = 100)
+
+plotshape(is_entangled, title='Entangled', location=location.belowbar, color=color.red, style=shape.labelup, text='⤢')
